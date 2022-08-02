@@ -30,8 +30,8 @@ stop_words = stopwords.union(['.', ',', '(', ')', 'shall', 'e.g.', 'use', 'i.e.'
 
 def searchStandards():
     procedures = listdir(directory)
-    searchDict = dict()
-    
+    searchDict = {}
+
     with open(standards_file) as f:  #load the file with the standards
         ccm = load(f)
         sections = ccm['sections']
@@ -40,14 +40,10 @@ def searchStandards():
         for standard in section['requirements']:
             word_tokens = word_tokenize((standard['title'] + " " + standard['summary']).lower())
 
-            filtered_sentence = []
-            for w in word_tokens: 
-                if w not in stop_words: 
-                    filtered_sentence.append(w)
-
+            filtered_sentence = [w for w in word_tokens if w not in stop_words]
             newSum = ""
             for w in filtered_sentence:  #create the search query from condensed terms
-                newSum = newSum + " OR " + w
+                newSum = f"{newSum} OR {w}"
 
             searchDict[('Suggestions for ' + standard['title'] + ': ' + standard['ref'])] = newSum
 
@@ -65,9 +61,9 @@ def searchStandards():
             text = f.read()
             writer.add_document(title=procedure_file, content=text)
     writer.commit()
- 
- 
-    searcher = ix.searcher() 
+
+
+    searcher = ix.searcher()
     with ix.searcher() as searcher: #search the index to get results
         for title, searchQuery in searchDict.items():
             query = QueryParser("content", schema=ix.schema).parse(searchQuery)
